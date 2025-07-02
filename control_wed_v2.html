@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Control micro:bit via ESP8266</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 30px; }
+    input, button {
+      font-size: 18px;
+      padding: 10px;
+      margin: 10px;
+    }
+    button.cmd {
+      width: 80px;
+      height: 80px;
+      font-size: 20px;
+      margin: 10px;
+    }
+    .row { margin: 10px 0; }
+    #status { margin-top: 15px; font-weight: bold; color: green; }
+  </style>
+</head>
+<body>
+
+  <h2>🔧 กรอก IP ของ ESP8266</h2>
+  <div>
+    <label>ESP IP:</label>
+    <input type="text" id="esp-ip" placeholder="เช่น 192.168.4.1" />
+    <button onclick="setESPIP()">✅ ตกลง</button>
+  </div>
+
+  <div id="control-panel" style="display: none;">
+    <h3>🕹 ควบคุม micro:bit</h3>
+    <div class="row">
+      <button class="cmd" onmousedown="startSend('U')" onmouseup="stopSend()">⬆️</button>
+    </div>
+    <div class="row">
+      <button class="cmd" onmousedown="startSend('L')" onmouseup="stopSend()">⬅️</button>
+      <button class="cmd" onmousedown="startSend('C')" onmouseup="stopSend()">⏹️</button>
+      <button class="cmd" onmousedown="startSend('R')" onmouseup="stopSend()">➡️</button>
+    </div>
+    <div class="row">
+      <button class="cmd" onmousedown="startSend('D')" onmouseup="stopSend()">⬇️</button>
+    </div>
+    <div class="row">
+      <button onclick="sendCmd('S+')">➕ เพิ่มความเร็ว</button>
+      <button onclick="sendCmd('S-')">➖ ลดความเร็ว</button>
+    </div>
+    <p id="status">Status: รอคำสั่ง...</p>
+  </div>
+
+  <script>
+    let espIP = "";
+    let interval = null;
+
+    function setESPIP() {
+      const input = document.getElementById("esp-ip").value.trim();
+      if (!input.match(/^(\d{1,3}\.){3}\d{1,3}$/)) {
+        alert("❌ กรุณาใส่ IP ที่ถูกต้อง เช่น 192.168.1.100");
+        return;
+      }
+      espIP = `http://${input}`;
+      document.getElementById("control-panel").style.display = "block";
+      document.getElementById("status").textContent = "✅ เชื่อมต่อกับ " + espIP;
+      document.getElementById("status").style.color = "green";
+    }
+
+    function startSend(cmd) {
+      sendCmd(cmd); // ส่งทันที
+      interval = setInterval(() => sendCmd(cmd), 200);
+    }
+
+    function stopSend() {
+      clearInterval(interval);
+    }
+
+    function sendCmd(cmd) {
+      if (!espIP) return;
+
+      fetch(`${espIP}/cmd?d=${cmd}`)
+        .then((res) => {
+          if (!res.ok) throw new Error("ไม่สำเร็จ");
+          return res.text();
+        })
+        .then((text) => {
+          document.getElementById("status").textContent = "✅ ส่งคำสั่ง: " + cmd;
+          document.getElementById("status").style.color = "green";
+        })
+        .catch((err) => {
+          document.getElementById("status").textContent = "❌ ไม่สามารถเชื่อมต่อกับ ESP ได้";
+          document.getElementById("status").style.color = "red";
+          console.error(err);
+        });
+    }
+  </script>
+
+</body>
+</html>

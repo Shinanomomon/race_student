@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Control micro:bit</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 40px; }
+    button {
+      width: 80px; height: 80px; font-size: 20px; margin: 10px;
+    }
+    .row { margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h2>Control micro:bit (External Web)</h2>
+
+  <div class="row">
+    <button onclick="startSend('U')" onmouseup="stopSend()">⬆️</button>
+  </div>
+  <div class="row">
+    <button onclick="startSend('L')" onmouseup="stopSend()">⬅️</button>
+    <button onclick="startSend('C')" onmouseup="stopSend()">⏹</button>
+    <button onclick="startSend('R')" onmouseup="stopSend()">➡️</button>
+  </div>
+  <div class="row">
+    <button onclick="startSend('D')" onmouseup="stopSend()">⬇️</button>
+  </div>
+  <div class="row">
+    <button onclick="sendCmd('S+')">➕</button>
+    <button onclick="sendCmd('S-')">➖</button>
+  </div>
+
+  <p id="status">Status: Ready</p>
+
+  <script>
+    const espIP = "http://192.168.100.66"; // 🔧 เปลี่ยนเป็น IP ของ ESP8266 ในเครือข่ายของคุณ
+    let interval = null;
+
+    function startSend(dir) {
+      interval = setInterval(() => sendCmd(dir), 200);
+    }
+
+    function stopSend() {
+      clearInterval(interval);
+    }
+
+    function sendCmd(dir) {
+      fetch(`${espIP}/cmd?d=${dir}`)
+        .then(res => res.text())
+        .then(txt => document.getElementById('status').textContent = 'Status: ' + txt)
+        .catch(err => console.error("Error:", err));
+    }
+  </script>
+</body>
+</html>
